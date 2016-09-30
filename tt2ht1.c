@@ -30,14 +30,18 @@ int main()
         if (state == 1) // beginning of table 
         {
 			printf("<table>"); 
-			state = 4; 
+			if (cur != ' ') { 
+				state = 2; 
+				printf("\n\t"); 
+				printf("<tr>\n\t\t<td>"); 
+				putchar(cur); 
+			} 
 			
         } 
         else if (state == 2) // generating a row 
         { 
             
 			if (cur == '\n') { // reached end of row 
-				printf("NL");
 				printf("</td>\n\t</tr>"); 
 				state = 4; 
 			} 
@@ -62,7 +66,7 @@ int main()
         {
 			
 			if (cur != ' ') { 
-				state = 3; 
+				state = 2; 
 				printf("\n\t"); 
 				printf("<tr>\n\t\t<td>"); 
 				putchar(cur); 
