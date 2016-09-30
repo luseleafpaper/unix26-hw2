@@ -53,7 +53,7 @@ int main()
         else if (state == 3)  // what to do while whitespace 
         {
 			if (cur != ' ') { 
-				//printf("<td>"); 
+				printf("<td>"); 
 				putchar(cur); 
 				state = 2; 
 			} 
