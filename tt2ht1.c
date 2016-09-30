@@ -17,7 +17,7 @@ int main()
 /*	
 	1. Beginning of file: <table><tr>. If not EOF -> 2. If EOF -> 5 
 	2. Create cells: <td> text until space, then </td>. -> 6 When encounter \n -> 4. When EOF -> 5
-	Whitespace: Nothing until text -> 3 
+	3. In whitespace: Nothing until text -> 3 
 	4. End of row: </tr> -> 2. 
 	5. End of file: </tr> </table> 
 */
