@@ -2,63 +2,88 @@
 
 /*
  * tt2ht1.c 
- *   purpose: filter data and prints out strings 
+ *   purpose: creates html table from text table  
  *     input: text
- *    output: text of only the strings, including escaped quotes 
+ *    output: html table  
  *    errors: no error conditions
- *     usage: extract_strings < input > output
+ *     usage: text > tt2ht1 > output 
  */
+
+void space(int state); 
 
 int main()
 {
-    /* Three states this machine can be in: 
-     * 1: not in any quotes: 
-     *      Start here or enter from state 2 
-     *      Don't print 
-     *      Exit to state 2 when ' 
-     * 2: in double quotes:
-     *      Enter when ' from state 1 
-     *      Print 
-     *      Exit to state 1 when ' 
-     * 3: in escaped double quotes: 
-     *      Enter when \" from state 2 
-     *      Print 
-     *      Exit to state 2 when \"
-     * In order to detect states 1 and 2, check if current char is '
-     * In order to detect state 3, check if current char is '
-     * and if the PREVIOUS char was \.    
-     * Oh, and if end of file is reached, terminate. 
-     */ 
+   
+/*	
+	1. Beginning of file: <table><tr>. If not EOF -> 2. If EOF -> 5 
+	2. Create cells: <td> text until space, then </td>. -> 6 When encounter \n -> 4. When EOF -> 5
+	Whitespace: Nothing until text -> 3 
+	4. End of row: </tr> -> 2. 
+	5. End of file: </tr> </table> 
+*/
 
     int cur; 
-    int prev; 
-    int state=1; 
+    int state=1;
+
     while ( (cur = getchar()) != EOF) 
     { 
-        if ((cur == '"') && (state == 1)) 
+        if (state == 1) // beginning of table 
         {
-            state = 2;
-            printf("\n");
+			printf("<table>"); 
+			space(state);
+			
+			state = 4; 
+			space(state);
+			
         } 
-        else if ((cur == '"') && (prev == '\\') && (state == 2))
+        else if (state == 2) // generating a row 
         { 
-            state = 3; 
-        }
-        else if ((cur == '"') && (prev == '\\') && (state == 3))
-        { 
-            state = 2; 
+            
+			if (cur == '\n') { // reached end of row 
+				printf("NL");
+				printf("</td></tr>"); 
+				state = 4; 
+			} 
+			else if (cur != ' ') {
+				putchar(cur); 
+			} 
+			else if (cur == ' ') { // reached whitespace 
+				printf("</td>"); 
+				state = 3; 
+			} 
+			
         } 
-        else if((cur == '"') && (state == 2)) 
+        else if (state == 3)  // what to do while whitespace 
         {
-            state = 1; 
-            putchar(cur);
+			if (cur != ' ') { 
+				//printf("<td>"); 
+				putchar(cur); 
+				state = 2; 
+			} 
         }
+		else if (state == 4) // begin new row 
+        {
+			
+			if (cur != ' ') { 
+				state = 3; 
+				space(state); 
+				printf("<tr><td>"); 
+				putchar(cur); 
+			} 
+        }
+    }
 
-        if ((state==2) || (state==3))
-        { 
-            putchar(cur); 
-        } 
-        prev = cur;
-    } 
+	state =5 ;
+	space(state); 
+	printf("</table>")  ;
 }
+
+void space(int state) { 
+	if (state == 1) printf("\n"); 
+	if (state == 2) printf("\n\t"); 
+	if (state == 3) printf("\n\t\t"); 
+	if (state == 6) printf("\n"); 
+	if (state == 4) printf("\n\t"); 
+	if (state == 5) printf("\n"); 
+} 
 
