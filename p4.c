@@ -31,29 +31,27 @@ int get_state(int state, char []);
 void main()
 {
 	int cur; 
-    int cstate=1; // the state of the cursor when processing text
+    int oldstate=1; // the state of the cursor when processing text
 	int pstate=1; //the state of the program
+	int tag=0; 
 
 	char attr[MAXLINES][MAXLEN]; 
 
 	char line[MAXLEN]; 
-	int attr_index = 0 ; 
-
-	strcpy(line, "here is some <attributes> and then some!"); 
-	
-	if ((pstate == 1) && (strstr(line, "<attributes>") ))  { 
-		printf("1. state -> 2"); 
-	} 
-
+	int attr_index = 0; 
 
 	while( fgets(line, MAXLEN, stdin) ) { 
 		/* keep \n and add \0 to end of line */
 
-
+		oldstate = pstate; 
 		pstate = get_state(pstate, line); 
-		printf("%d >>> %s", pstate, line) ; 
+		if (oldstate != pstate) tag = 1; 
 		
-        if (pstate ==2) // store attribute 
+		if (tag ==1) { 
+		//printf("%d >>> %s", pstate, line) ; 
+		} 
+		
+        else if (pstate ==2) // store attribute 
         { 
 
             strcpy(attr[attr_index], line); 
@@ -62,12 +60,13 @@ void main()
         } 
 		else if (pstate ==3) // no process
 		{
-			//printf("%s", line); 
+			printf("%s", line); 
 		} 
 		else //default format table 
 		{
 			//printf("%s", line); 
-		} 
+		}
+		tag = 0;  
 	}
 } 
 
