@@ -105,7 +105,8 @@ void process(char line[], char attr[MAXLINES][MAXLEN])
 	int columns; 
 	columns = split_line(line, row); 
 	printf("\n\t<tr>"); 
-	for (int i = 0; i < columns; i++)
+    int i;  
+	for (i = 0; i < columns; i++)
 	{ 
 		printf("\n\t\t<td %s> %s </td>", attr[i], row[i]); 
 	} 
@@ -122,8 +123,9 @@ split_line( char line[], char row[MAXLINES][MAXLEN] )
 	int in_text=0; 
 	int column_index = 0; 
 	int cell_index =0; 
-
-	for (int line_index=0; line_index < strlen(line)+1; line_index++)
+    int line_index; 
+    
+	for (line_index=0; line_index < strlen(line)+1; line_index++)
 	{
 		if ((line[line_index] == ' ') && (in_text ==1)) //hit a space 
 		{ 			
