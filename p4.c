@@ -23,11 +23,16 @@ If I encounter a <noprocess> inside an attribute block, I will also print it.
 In other words, the attribute state can only be entered from the default state.
 The noprocess state is greedy - this can be invoked from any state. 
 */
+
+#define DELIM ' '
 int MAXLINES=300; 
 int MAXLEN=300; 
-int process(int cur, int state); 
-void load(char [MAXLINES][MAXLEN]); 
+void process(char [], char attr[MAXLINES][MAXLEN] ); 
 int get_state(int state, char []); 
+
+int split_line( char orig[], char fields[MAXLINES][MAXLEN] );
+
+
 void main()
 {
 	int cur; 
@@ -45,17 +50,18 @@ void main()
 
 		oldstate = pstate; 
 		pstate = get_state(pstate, line); 
+
 		if (oldstate != pstate) tag = 1; 
 		
 		if (tag ==1) { 
-		//printf("%d >>> %s", pstate, line) ; 
+		//do nothing when the line IS the tag 
+		tag = 0;  
 		} 
 		
         else if (pstate ==2) // store attribute 
         { 
-
             strcpy(attr[attr_index], line); 
-            attr[attr_index][strlen(line)] = '\0'; 
+            attr[attr_index][strlen(line)-1] = '\0'; 
             attr_index++; 
         } 
 		else if (pstate ==3) // no process
@@ -64,9 +70,9 @@ void main()
 		} 
 		else //default format table 
 		{
-			//printf("%s", line); 
+			process(line, attr); 
 		}
-		tag = 0;  
+		
 	}
 } 
 
@@ -77,7 +83,7 @@ int get_state(int curstate, char line[])
 
 		return 2; 
 	} 
-	if ((curstate == 2) && (line == "</attribute>")) { 
+	if ((curstate == 2) && (strstr(line, "</attributes>") )) { 
 
 		return 1; 
 	} 
@@ -90,80 +96,58 @@ int get_state(int curstate, char line[])
 		return 1; 
 	} 
 	return curstate; 
-/*	if ((curstate == 1) && (line == "<noprocess>")){ 
-		return 3; 
-	} 
-	if ((curstate == 3) && (line == "</noprocess>")) { 
-		return 1; 
-	} 
-	*/
 }
-void load(char attr[MAXLINES][MAXLEN])
-{
-	
+
+
+void process(char line[], char attr[MAXLINES][MAXLEN]) 
+{ 
+	char row[MAXLINES][MAXLEN];
+	int columns; 
+	columns = split_line(line, row); 
+	printf("\n\t<tr>"); 
+	for (int i = 0; i < columns; i++)
+	{ 
+		printf("\n\t\t<td %s> %s </td>", attr[i], row[i]); 
+	} 
+
+	printf("\n\t</tr>\n"); 
 } 
 
-/*	
-	1. Beginning of file: <table><tr>. If not EOF -> 2. If EOF -> 5 
-	2. Create cells: <td> text until space, then </td>. -> 6 When encounter \n -> 4. When EOF -> 5
-	3. In whitespace: Nothing until text -> 3 
-	4. End of row: </tr> -> 2. 
-	5. End of file: </tr> </table> 
-*/
-int process(int cur, int state)  
-{
-    if (state == 1) // beginning of table 
-    {
-		printf("<table>"); 
-		if (cur != ' ') { 
-			state = 2; 
-			printf("\n\t"); 
-			printf("<tr>\n\t\t<td>"); 
-			putchar(cur); 
-		} 
-		
-    } 
-    else if (state == 2) // generating a row 
-    { 
-        
-		if (cur == '\n') { // reached end of row 
-			printf("</td>\n\t</tr>"); 
-			state = 4; 
-		} 
-		else if (cur != ' ') {
-			putchar(cur); 
-		} 
-		else if (cur == ' ') { // reached whitespace 
-			printf("</td>"); 
-			state = 3; 
-		} 
-		
-    } 
-    else if (state == 3)  // what to do while whitespace 
-    {
-		if (cur != ' ') { 
-			printf("<td>"); 
-			putchar(cur); 
-			state = 2; 
-		} 
-    }
-	else if (state == 4) // begin new row 
-    {
-		
-		if (cur != ' ') { 
-			state = 2; 
-			printf("\n\t"); 
-			printf("<tr>\n\t\t<td>"); 
-			putchar(cur); 
-		} 
-    }
-    else {
-		state =5 ;
-		printf("\n");
-		printf("</table>")  ;
-	} 
+int
+split_line( char line[], char row[MAXLINES][MAXLEN] )
+/*
 
-	return state ;
+*/
+{
+	int in_text=0; 
+	int column_index = 0; 
+	int cell_index =0; 
+
+	for (int line_index=0; line_index < strlen(line)+1; line_index++)
+	{
+		if ((line[line_index] == ' ') && (in_text ==1)) //hit a space 
+		{ 			
+			in_text = 0;
+			row[column_index][cell_index] = '\0'; 
+			cell_index = 0; 
+			column_index++; 			
+		} 
+		else if (line[line_index] == '\0') //reached end of the line 
+		{ 
+			column_index++; //finished last column 
+			row[column_index][cell_index] = line[line_index]; //copy trailing \0	
+
+			return column_index; 
+		} 
+		else if ((line[line_index] != ' ') && (line[line_index] != '\n') ) //cell contents 
+		{
+			in_text = 1; 
+			row[column_index][cell_index] = line[line_index]; 
+			cell_index++; 
+		}
+	}
+
 
 }
+
 
