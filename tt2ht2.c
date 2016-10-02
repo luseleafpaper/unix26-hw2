@@ -3,11 +3,10 @@
 
 /*
 Methodology: 
-array of strings for attributes 
-read lattr line by line using fgets() 
-if noprocess, just print 
-if attribute, store entire attribute into a row in my array 
-if process, then do exactly what the previous code did 
+Read line by line using fgets() 
+if state is noprocess, just print 
+if state is attribute, store entire attribute into a row in my array 
+if process, then print html tags and insert attribute for that column 
 */ 
 
 
@@ -17,7 +16,8 @@ Program states:
 2. in attribute block. Store attributes to attr. if /attribute -> 1
 3. in noprocess block. print lines. if /noprocess -> 1
 
-For part4, I'm going to assume properly formatted input. 
+For part4, I'm going to assume properly formatted input, in that there 
+won't be a line with multiple tags in it.  
 If I encounter an <attributes> inside a noprocess block, I will print it. .
 If I encounter a <noprocess> inside an attribute block, I will also print it. 
 In other words, the attribute state can only be entered from the default state.
@@ -36,8 +36,8 @@ int split_line( char orig[], char fields[MAXLINES][MAXLEN] );
 void main()
 {
 	int cur; 
-    int oldstate=1; // the state of the cursor when processing text
-	int pstate=1; //the state of the program
+    int oldstate=1; // the state of the program before processing the current line
+	int pstate=1; //the state of the program. 
 	int tag=0; 
 
 	char attr[MAXLINES][MAXLEN]; 
@@ -52,6 +52,8 @@ void main()
 		pstate = get_state(pstate, line); 
 
 		if (oldstate != pstate) tag = 1; 
+        // This means we encountered an html tag that changes the state of the program
+        // We want to act on it, but not print or store it. 
 		
 		if (tag ==1) { 
 		//do nothing when the line IS the tag 
@@ -100,6 +102,10 @@ int get_state(int curstate, char line[])
 
 
 void process(char line[], char attr[MAXLINES][MAXLEN]) 
+/*
+Creates the table rows and columns by using split_lines() 
+Adds attributes per column from the attributes array 
+*/ 
 { 
 	char row[MAXLINES][MAXLEN];
 	int columns; 
@@ -114,10 +120,14 @@ void process(char line[], char attr[MAXLINES][MAXLEN])
 	printf("\n\t</tr>\n"); 
 } 
 
-int
-split_line( char line[], char row[MAXLINES][MAXLEN] )
+int split_line( char line[], char row[MAXLINES][MAXLEN] )
 /*
-
+Splits lines of text that needs to be processed on space
+Can be in two states: in text, or in white space. 
+Stores results into an 2D array 
+If in text, write characters to array
+If in whitespace, move to the next index in the array to store the next word 
+Returns the number of words 
 */
 {
 	int in_text=0; 
