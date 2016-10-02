@@ -34,7 +34,7 @@ int split_line( char orig[], char fields[MAXLINES][MAXLEN], char DELIM );
 
 void main()
 {
-	int cur; 
+	int cur;
     int oldstate=1; // the state of the cursor when processing text
 	int pstate=1; //the state of the program
 	int tag=0; 
@@ -64,7 +64,6 @@ void main()
 		//do nothing when the line IS the tag 
 		tag = 0;  
 		} 
-		
         else if (pstate ==2) // store attribute 
         { 
             strcpy(attr[attr_index], line); 
@@ -77,7 +76,6 @@ void main()
 		} 
 		else //default format table 
 		{
-			printf(">>>%s", line); 
 			process(line, attr); 
 		}
 		
@@ -126,7 +124,7 @@ void process(char line[], char attr[MAXLINES][MAXLEN])
 	char row[MAXLINES][MAXLEN];
 	int columns; 
 	columns = split_line(line, row, DELIM); 
-	printf("split_line() found %d columns", columns); 
+
 	printf("\n\t<tr>"); 
     int i;  
 	for (i = 0; i < columns; i++)
@@ -152,15 +150,15 @@ If DELIM is not a space, then we have to treat each DELIM as a column separator
     
 	for (line_index=0; line_index < strlen(line)+1; line_index++)
 	{
-		if ((DELIM==' ') && (line[line_index] == ' ') && (in_text ==1)) //hit a space 
+		if ((DELIM==' ') && (line[line_index] == ' ') && (in_text ==1)) //hit a space, create a new column 
 		{ 			
 			in_text = 0;
 			row[column_index][cell_index] = '\0'; 
 			cell_index = 0; 
 			column_index++; 			
 		} 
-		else if (line[line_index] == DELIM)
-		{ 			
+		else if (line[line_index] == DELIM && (in_text ==1)) // hit a delim, create a new cell 
+		{ 		
 			in_text = 0;
 			row[column_index][cell_index] = '\0'; 
 			cell_index = 0; 
@@ -173,12 +171,14 @@ If DELIM is not a space, then we have to treat each DELIM as a column separator
 
 			return column_index; 
 		} 
-		else if ((line[line_index] != DELIM) && (line[line_index] != '\n') ) //cell contents 
+		else if ((line[line_index] != DELIM) && (line[line_index] != '\n') ) 
+		//cell contents 
 		{
 			in_text = 1; 
 			row[column_index][cell_index] = line[line_index]; 
 			cell_index++; 
 		}
+		else {} // else do nothing. It's spaces, in_text = 0 ; 
 	}
 
 
