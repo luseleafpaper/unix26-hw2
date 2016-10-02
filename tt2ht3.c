@@ -3,11 +3,15 @@
 
 /*
 Methodology: 
-array of strings for attributes 
-read lattr line by line using fgets() 
+Create a 2D array of strings for attributes 
+read line by line using fgets() 
 if noprocess, just print 
 if attribute, store entire attribute into a row in my array 
 if process, then do exactly what the previous code did 
+if delim, store delim
+
+When splitting strings, split columns on any number of consecutive spaces, 
+but split single-char delimited text on each delimiter. 
 */ 
 
 
@@ -17,11 +21,6 @@ Program states:
 2. in attribute block. Store attributes to attr. if /attribute -> 1
 3. in noprocess block. print lines. if /noprocess -> 1
 4. in delimiter tag. Store the delimiter into DELIM 
-For part4, I'm going to assume properly formatted input. 
-If I encounter an <attributes> inside a noprocess block, I will print it. .
-If I encounter a <noprocess> inside an attribute block, I will also print it. 
-In other words, the attribute state can only be entered from the default state.
-The noprocess state is greedy - this can be invoked from any state. 
 */
 char DELIM =' ';
 int MAXLINES=300; 
@@ -109,6 +108,9 @@ int get_state(int curstate, char line[])
 }
 
 char find_delim(char line[]) 
+/* 
+In the <delim> tag, the delimiter is a char that follows the equal sign
+*/ 
 { 
 	int i ; 
 	for (i = 0; i<strlen(line); i++)
@@ -178,7 +180,7 @@ If DELIM is not a space, then we have to treat each DELIM as a column separator
 			row[column_index][cell_index] = line[line_index]; 
 			cell_index++; 
 		}
-		else {} // else do nothing. It's spaces, in_text = 0 ; 
+		else {} // else do nothing. We are encountering spaces and in_text = 0 
 	}
 
 

@@ -24,7 +24,13 @@ The relevant files for part 3 are:
 
 * part4b.cgi - This file combines part4b.top and who.output as inputs for the table converter. 
 * part4b.top - This text file contains some XML tags that the table converter uses. 
-* tt2ht1.c - this program is the table converter. It creates an html table from a text table, and can be configured using tags in the xml 
-* tt2ht1 - the compiled command 
+* tt2ht2.c - this program is the table converter. It creates an html table from a text table, and can be configured using tags in the xml 
+* tt2ht2 - the compiled command 
 
+#Part 5
 
+The relevant files for part 3 are: 
+
+* part5b.cgi - This file combines part4b.top and who.output as inputs for the table converter. 
+* tt2ht3.c - this program is the table converter. It creates an html table from a text table, and can be configured using tags in the xml 
+* tt2ht3 - the compiled command 
