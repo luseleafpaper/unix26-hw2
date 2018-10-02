@@ -2,9 +2,9 @@
 
 The three commands I picked here: 
 
-* netstat - shows network routes, interfaces, and connections 
-* df - shows disk usage 
-* free - shows memory usage 
+* ps - reports a snapshot of current processes 
+* arp - manipulates or displays the kernal's IPv4 network neighborhood cache. 
+* lsmod - reformats the contents of /proc/modules, showing what kernel modules are currently loaded 
 
 #Part 2 
 
