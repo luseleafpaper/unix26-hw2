@@ -10,6 +10,12 @@
  */
 
 void space(int state); 
+void start_table(int state); 
+void start_row(int state);
+void start_cell(int state);
+void end_cell(int state); 
+void end_row(int state); 
+void end_table(int state); 
 
 int main()
 {
