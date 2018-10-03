@@ -25,10 +25,10 @@ int end_table(int state);
    
 /*	
 	1. Beginning of file: <table><tr>. If not EOF -> 2. If EOF -> 5 
-	2. Create cells: <td> text until space, then </td>. -> 6 When encounter \n -> 4. When EOF -> 5
-	3. In whitespace: Nothing until text -> 3 
+	2. Create cells: <td> text until space, then in between cells -> 3. When encounter \n -> 4. When EOF -> 5
+	3. In whitespace: Nothing until text -> 2 
 	4. End of row: </tr> -> 2. 
-	5. End of file: </tr> </table> 
+	5. End of table data: </tr> </table> 
 */
 
 int main()
@@ -106,6 +106,6 @@ int end_row(int state) {
 } 
 
 int end_table(int state) {
-    printf("\n<table>"); 
+    printf("\n<table>\n"); 
     return AFTERDATA; 
 }
