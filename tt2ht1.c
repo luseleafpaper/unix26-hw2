@@ -9,16 +9,19 @@
  *     usage: text > tt2ht1 > output 
  */
 
-void space(int state); 
-void start_table(int state); 
-void start_row(int state);
-void start_cell(int state);
-void end_cell(int state); 
-void end_row(int state); 
-void end_table(int state); 
+#define BEFOREDATA 1 
+#define INCELL 2 
+#define BETWEENCELLS 3
+#define BETWEENROWS 4 
+#define AFTERDATA 5 
 
-int main()
-{
+int start_table(int state); 
+int start_row(int state);
+int start_cell(int state);
+int end_cell(int state); 
+int end_row(int state); 
+int end_table(int state); 
+
    
 /*	
 	1. Beginning of file: <table><tr>. If not EOF -> 2. If EOF -> 5 
@@ -28,69 +31,81 @@ int main()
 	5. End of file: </tr> </table> 
 */
 
+int main()
+{
     int cur; 
-    int state=1;
+    int state=BEFOREDATA;
 
     while ( (cur = getchar()) != EOF) 
     { 
-        if (state == 1) // beginning of table 
+        if (state == BEFOREDATA) // beginning of table 
         {
-			printf("<table>"); 
-			if (cur != ' ') { 
-				state = 2; 
-				printf("\n\t"); 
-				printf("<tr>\n\t\t<td>"); 
+			if ((cur != ' ') || (cur !='\t')) { 
+				state = start_table(state); 
 				putchar(cur); 
 			} 
 			
         } 
-        else if (state == 2) // generating a row 
-        { 
-            
+        else if (state == INCELL) { // generating a row 
 			if (cur == '\n') { // reached end of row 
-				printf("</td>\n\t</tr>"); 
-				state = 4; 
+				state = end_row(state); 
 			} 
-			else if (cur != ' ') {
+			else if ((cur != ' ') && (cur != '\t')) { // print out the contents of a cell! 
 				putchar(cur); 
 			} 
-			else if (cur == ' ') { // reached whitespace 
-				printf("</td>"); 
-				state = 3; 
+			else if ((cur == ' ')  || (cur != '\t')) { // reached whitespace 
+				state = end_cell(state); 
 			} 
 			
         } 
-        else if (state == 3)  // what to do while whitespace 
-        {
-			if (cur != ' ') { 
-				printf("<td>"); 
+        else if (state == BETWEENCELLS) { // what to do while whitespace 
+			if ((cur != ' ') && (cur != '\t')) { 
+                state = start_cell(state); 
 				putchar(cur); 
-				state = 2; 
 			} 
         }
-		else if (state == 4) // begin new row 
-        {
-			
-			if (cur != ' ') { 
-				state = 2; 
-				printf("\n\t"); 
-				printf("<tr>\n\t\t<td>"); 
+		else if (state == BETWEENROWS) { // begin new row 
+			if ((cur != ' ') && (cur != '\t')) { 
+                state = start_row(state); 
 				putchar(cur); 
 			} 
         }
     }
 
-	state =5 ;
-	printf("\n");
-	printf("</table>")  ;
+	if (state != BEFOREDATA) { 
+        state = end_table(state);
+    }
+    return 0; 
 }
 
-void space(int state) { 
-	if (state == 1) printf("\n"); 
-	if (state == 2) printf("\n\t"); 
-	if (state == 3) printf("\n\t"); 
-	if (state == 6) printf("\n"); 
-	if (state == 4) printf("\n\t"); 
-	if (state == 5) printf("\n"); 
+int start_table(int state) { 
+    printf("<table>"); 
+    printf("\n\t"); 
+    printf("<tr>\n\t\t<td>");
+    return INCELL; 
 } 
 
+int start_row(int state) { 
+    printf("\n\t<tr>");
+    return start_cell(state); 
+} 
+
+int start_cell(int state) { 
+    printf("\n\t\t<td>");
+    return INCELL;
+} 
+
+int end_cell(int state) { 
+    printf("</td>"); 
+    return BETWEENCELLS;
+} 
+
+int end_row(int state) { 
+    printf("</td>\n\t</tr>"); 
+    return BETWEENROWS; 
+} 
+
+int end_table(int state) {
+    printf("\n<table>"); 
+    return AFTERDATA; 
+}

@@ -4,7 +4,7 @@
 #
 echo "Content-type: text/html"
 echo ""
-echo "<html><body style=’background-color: white;’>"
+echo "<html><body style='background-color: white;'>"
 echo "<p>Here are routes to other computers:"
 /sbin/route | ./tt2ht1
 echo "<p>Here are the current files:</p>"
