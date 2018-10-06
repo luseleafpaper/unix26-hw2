@@ -43,7 +43,7 @@ For part4, I'm going to assume properly formatted input, in that there
 won't be a line with multiple tags in it.  
 If I encounter an <attributes> inside a noprocess block, I will print it. .
 If I encounter a <noprocess> inside an attribute block, I will treat it like a string.
-In other words, the attribute and noprocess states can only be entered from the process state.
+In other words, the attribute and noprocess states can only be entered from the process or init states.
 */
 
 #define DELIM ' '
