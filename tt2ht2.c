@@ -11,10 +11,33 @@ if process, then print html tags and insert attribute for that column
 
 
 /*
-Program states: 
-1. process block (default). Create html table. If attribute -> 2, if noprocess -> 3
-2. in attribute block. Store attributes to attr. if /attribute -> 1
-3. in noprocess block. print lines. if /noprocess -> 1
+
+                                  +---------------+
++---------+                       |               |
+|         +----noprocess---------->               |
+| Init    +----attributes------+  |  No process   |
++--------++                    |  |  (print!)     |
+         |                     |  |               |
+         |         +-noprocess---->               |
+         |         |           |  +---+-----------+
+         |         |           |      |
+        +v---------+---+       |      |
+        |              |       |      |
+        |  Process     <--/noprocess--+
+        |  table text  |       |
+        |  (similar    |       |
+        |  last FSM)   |       |
+        |              |       |
+        +-+-^----------+       |
+          | |                  |
+          | |              +---v------------+
+          | |              |                |
+          | +-/attributes--+  Store         |
+          |                |  attributes    |
+          |                |  (build attr   |
+          |                |  array)        |
+          +----attributes-->                |
+                           +----------------+
 
 For part4, I'm going to assume properly formatted input, in that there 
 won't be a line with multiple tags in it.  
@@ -25,60 +48,58 @@ The noprocess state is greedy - this can be invoked from any state.
 */
 
 #define DELIM ' '
+#define START 1 
+#define PROCESS 2 
+#define NOPROCESS 3 
+#define ATTRIBUTE 4 
+#define END 5 
+
 int MAXLINES=300; 
 int MAXLEN=300; 
-void process(char [], char attr[MAXLINES][MAXLEN] ); 
-int get_state(int state, char []); 
 
-int split_line( char orig[], char fields[MAXLINES][MAXLEN] );
+int check_line_state(char line[MAXLEN]); 
+int split_line(char line[MAXLEN], char splot_line[MAXLINES][MAXLEN]); 
+int process_line(char line[MAXLEN], attr[MAXLINES][MAXLEN]); 
+int store_attr(int attr_index, attr[MAXLINES][MAXLEN]); 
 
+/*
+main() 
 
-void main()
+Stores attributes, an array of strings 
+Stores the current line, a string 
+Stores the number of attributes 
+
+Manages the transitions between the PROCESS, NOPROCESS, and ATTRIBUTE states
+It calls check_line_state() after each line to look for state change tags 
+Here's what we do in each state: 
+NOPROCESS: print out the line as is 
+ATTRIBUTE: As soon as we enter this state, each new line goes into the attr array
+PROCESS: Send line by line of table text into process_line() to form rows and cells with attrs 
+
+*/ 
+int main()
 {
-	int cur; 
-    int oldstate=1; // the state of the program before processing the current line
-	int pstate=1; //the state of the program. 
-	int tag=0; 
-
 	char attr[MAXLINES][MAXLEN]; 
-
+	char table_lines[MAXLINES][MAXLEN]; 
 	char line[MAXLEN]; 
 	int attr_index = 0; 
 
+    int state = START; 
+    int prevstate = START; 
+    
 	while( fgets(line, MAXLEN, stdin) ) { 
 		/* keep \n and add \0 to end of line */
 
-		oldstate = pstate; 
-		pstate = get_state(pstate, line); 
+        prevstate = state; 
+		state = check_line_state(prevstate, line); 
+        
+        if (state==
 
-		if (oldstate != pstate) tag = 1; 
-        // This means we encountered an html tag that changes the state of the program
-        // We want to act on it, but not print or store it. 
-		
-		if (tag ==1) { 
-		//do nothing when the line IS the tag 
-		tag = 0;  
-		} 
-		
-        else if (pstate ==2) // store attribute 
-        { 
-            strcpy(attr[attr_index], line); 
-            attr[attr_index][strlen(line)-1] = '\0'; 
-            attr_index++; 
-        } 
-		else if (pstate ==3) // no process
-		{
-			printf("%s", line); 
-		} 
-		else //default format table 
-		{
-			process(line, attr); 
-		}
 		
 	}
 } 
 
-int get_state(int curstate, char line[]) 
+int check_line_state(int curstate, char line[]) 
 {
 	
 	if ((curstate == 1) && (strstr(line, "<attributes>") ))  { 
@@ -158,8 +179,6 @@ Returns the number of words
 			cell_index++; 
 		}
 	}
-
-
 }
 
 
