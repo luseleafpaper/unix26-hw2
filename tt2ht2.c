@@ -101,7 +101,7 @@ int main()
             printf("%s", line); 
         } 
         else if (state==ATTRIBUTE) { 
-            store_attr(attr_index, attr, line); 
+            attr_index = store_attr(attr_index, attr, line); 
         } 
         else if (state==PROCESS) { 
             process_line(line, attr); 
@@ -113,7 +113,7 @@ int main()
 int store_attr(int attr_index, char attr[MAXLINES][MAXLEN], char line[MAXLEN]) 
 {
     strncpy(attr[attr_index], line, MAXLEN); 
-    attr[attr_index][strlen(line)-1] = '\0';
+    attr[attr_index][strlen(attr[attr_index])-1] = '\0';
     attr_index++; 
     return attr_index; 
 }
@@ -156,7 +156,7 @@ Adds attributes per column from the attributes array
 		printf("\n\t\t<td %s> %s </td>", attr[i], row[i]); 
 	} 
 
-	printf("\n\t</tr>\n"); 
+	printf("\n\t</tr>"); 
     return 0;
 } 
 
