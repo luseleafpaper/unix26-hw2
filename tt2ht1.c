@@ -24,7 +24,7 @@ int end_table(int state);
 
    
 /*	
-	1. Beginning of file: <table><tr>. If not EOF -> 2. If EOF -> 5 
+	1. Beginning of file: <table><tr>. If not EOF -> 2. If EOF -> don't leave this state, main exits.
 	2. Create cells: <td> text until space, then in between cells -> 3. When encounter \n -> 4. When EOF -> 5
 	3. In whitespace: Nothing until text -> 2 
 	4. End of row: </tr> -> 2. 
