@@ -53,14 +53,15 @@ The noprocess state is greedy - this can be invoked from any state.
 #define NOPROCESS 3 
 #define ATTRIBUTE 4 
 #define END 5 
+#define STATECHANGELINE 6 
 
 int MAXLINES=300; 
 int MAXLEN=300; 
 
-int check_line_state(char line[MAXLEN]); 
+int check_line_state(int prevstate, char line[MAXLEN]); 
 int split_line(char line[MAXLEN], char splot_line[MAXLINES][MAXLEN]); 
-int process_line(char line[MAXLEN], attr[MAXLINES][MAXLEN]); 
-int store_attr(int attr_index, attr[MAXLINES][MAXLEN]); 
+int process_line(char line[MAXLEN], char attr[MAXLINES][MAXLEN]); 
+int store_attr(int attr_index, char attr[MAXLINES][MAXLEN], char line[MAXLEN]); 
 
 /*
 main() 
@@ -80,7 +81,7 @@ PROCESS: Send line by line of table text into process_line() to form rows and ce
 int main()
 {
 	char attr[MAXLINES][MAXLEN]; 
-	char table_lines[MAXLINES][MAXLEN]; 
+	//char table_lines[MAXLINES][MAXLEN]; 
 	char line[MAXLEN]; 
 	int attr_index = 0; 
 
@@ -93,36 +94,53 @@ int main()
         prevstate = state; 
 		state = check_line_state(prevstate, line); 
         
-        if (state==
-
-		
+        if (state!=prevstate) { 
+            // do nothing! this is the state change line! 
+        } 
+        else if (state==NOPROCESS) {
+            printf("%s", line); 
+        } 
+        else if (state==ATTRIBUTE) { 
+            store_attr(attr_index, attr, line); 
+        } 
+        else if (state==PROCESS) { 
+            process_line(line, attr); 
+        } 
 	}
+    return 0;
 } 
 
-int check_line_state(int curstate, char line[]) 
+int store_attr(int attr_index, char attr[MAXLINES][MAXLEN], char line[MAXLEN]) 
 {
-	
-	if ((curstate == 1) && (strstr(line, "<attributes>") ))  { 
-
-		return 2; 
-	} 
-	if ((curstate == 2) && (strstr(line, "</attributes>") )) { 
-
-		return 1; 
-	} 
-	if (strstr(line, "<noprocess>") ) { 
-
-		return 3; 
-	} 
-	if (strstr(line, "</noprocess>") ) { 
-
-		return 1; 
-	} 
-	return curstate; 
+    strncpy(attr[attr_index], line, MAXLEN); 
+    attr[attr_index][strlen(line)-1] = '\0';
+    attr_index++; 
+    return attr_index; 
 }
 
 
-void process(char line[], char attr[MAXLINES][MAXLEN]) 
+int check_line_state(int prevstate, char line[]) 
+{
+	
+    if ((prevstate == START) || (prevstate == PROCESS))  { 
+        if (strstr(line, "<noprocess>")) return NOPROCESS; 
+        if (strstr(line, "<attributes>")) return ATTRIBUTE; 
+        return PROCESS; 
+    } 
+    if (prevstate == ATTRIBUTE)  { 
+        if (strstr(line, "</attributes>")) return PROCESS; 
+        return prevstate; // else do this by defaut  
+    }
+    if (prevstate == NOPROCESS)  { 
+        if (strstr(line, "</noprocess>")) return PROCESS; 
+        return prevstate; // else do this by defaut  
+    }
+    return -1; // something went wrong! 
+    
+}
+
+
+int process_line(char line[], char attr[MAXLINES][MAXLEN]) 
 /*
 Creates the table rows and columns by using split_lines() 
 Adds attributes per column from the attributes array 
@@ -139,9 +157,10 @@ Adds attributes per column from the attributes array
 	} 
 
 	printf("\n\t</tr>\n"); 
+    return 0;
 } 
 
-int split_line( char line[], char row[MAXLINES][MAXLEN] )
+int split_line( char line[], char splot_line[MAXLINES][MAXLEN] )
 /*
 Splits lines of text that needs to be processed on space
 Can be in two states: in text, or in white space. 
@@ -161,24 +180,25 @@ Returns the number of words
 		if ((line[line_index] == ' ') && (in_text ==1)) //hit a space 
 		{ 			
 			in_text = 0;
-			row[column_index][cell_index] = '\0'; 
+			splot_line[column_index][cell_index] = '\0'; 
 			cell_index = 0; 
 			column_index++; 			
 		} 
 		else if (line[line_index] == '\0') //reached end of the line 
 		{ 
 			column_index++; //finished last column 
-			row[column_index][cell_index] = line[line_index]; //copy trailing \0	
+			splot_line[column_index][cell_index] = line[line_index]; //copy trailing \0	
 
 			return column_index; 
 		} 
 		else if ((line[line_index] != ' ') && (line[line_index] != '\n') ) //cell contents 
 		{
 			in_text = 1; 
-			row[column_index][cell_index] = line[line_index]; 
+			splot_line[column_index][cell_index] = line[line_index]; 
 			cell_index++; 
 		}
 	}
+    return column_index; 
 }
 
 
