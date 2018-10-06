@@ -47,6 +47,7 @@ In other words, the attribute and noprocess states can only be entered from the 
 */
 
 #define DELIM ' '
+#define DELIM2 '\t'
 #define START 1 
 #define PROCESS 2 
 #define NOPROCESS 3 
@@ -195,7 +196,7 @@ int split_line( char line[], char splot_line[MAXLINES][MAXLEN] )
 	for (line_index=0; line_index < strlen(line); line_index++)
 	{
         this_char = line[line_index];  
-		if (((this_char == '\t') || (this_char == ' ')) && (in_text ==1)) //hit a space 
+		if (((this_char == DELIM2) || (this_char == DELIM)) && (in_text ==1)) //hit a space 
 		{ 			
 			in_text = 0;
 			splot_line[column_index][cell_index] = '\0'; 
@@ -208,7 +209,7 @@ int split_line( char line[], char splot_line[MAXLINES][MAXLEN] )
 			column_index++; //finished last column 
 			return column_index; 
 		} 
-		else if ((this_char != '\t') && (this_char != ' ') && (this_char != '\n') ) //cell contents 
+		else if ((this_char != DELIM2) && (this_char != DELIM) && (this_char != '\n') ) //cell contents 
 		{
 			in_text = 1; 
 			splot_line[column_index][cell_index] = this_char; 
