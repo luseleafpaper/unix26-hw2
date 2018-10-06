@@ -42,9 +42,8 @@ if process, then print html tags and insert attribute for that column
 For part4, I'm going to assume properly formatted input, in that there 
 won't be a line with multiple tags in it.  
 If I encounter an <attributes> inside a noprocess block, I will print it. .
-If I encounter a <noprocess> inside an attribute block, I will also print it. 
-In other words, the attribute state can only be entered from the default state.
-The noprocess state is greedy - this can be invoked from any state. 
+If I encounter a <noprocess> inside an attribute block, I will treat it like a string.
+In other words, the attribute and noprocess states can only be entered from the process state.
 */
 
 #define DELIM ' '
@@ -106,10 +105,20 @@ int main()
         else if (state==PROCESS) { 
             process_line(line, attr); 
         } 
+        else {
+            return -1; //something went wrong?
+        }
 	}
     return 0;
 } 
 
+
+/*
+store_attr()
+Takes the current attr_index, the attr table, and text line
+Stores the text as the next attr, increments the attr_index
+returns the attr_index
+*/
 int store_attr(int attr_index, char attr[MAXLINES][MAXLEN], char line[MAXLEN]) 
 {
     strncpy(attr[attr_index], line, MAXLEN); 
@@ -119,6 +128,12 @@ int store_attr(int attr_index, char attr[MAXLINES][MAXLEN], char line[MAXLEN])
 }
 
 
+/*
+check_line_state()
+Takes the incoming line, checks if it is a line that can change the FSM state 
+If so, return the new state.
+Returns -1 if something goes wrong
+*/
 int check_line_state(int prevstate, char line[]) 
 {
 	
@@ -140,27 +155,27 @@ int check_line_state(int prevstate, char line[])
 }
 
 
-int process_line(char line[], char attr[MAXLINES][MAXLEN]) 
 /*
 Creates the table rows and columns by using split_lines() 
 Adds attributes per column from the attributes array 
 */ 
+int process_line(char line[], char attr[MAXLINES][MAXLEN]) 
 { 
 	char row[MAXLINES][MAXLEN];
 	int columns; 
 	columns = split_line(line, row); 
-	printf("\n\t<tr>"); 
+	printf("\t<tr>"); 
     int i;  
 	for (i = 0; i < columns; i++)
 	{ 
 		printf("\n\t\t<td %s> %s </td>", attr[i], row[i]); 
 	} 
 
-	printf("\n\t</tr>"); 
+	printf("\n\t</tr>\n"); 
     return 0;
 } 
 
-int split_line( char line[], char splot_line[MAXLINES][MAXLEN] )
+
 /*
 Splits lines of text that needs to be processed on space
 Can be in two states: in text, or in white space. 
@@ -169,32 +184,34 @@ If in text, write characters to array
 If in whitespace, move to the next index in the array to store the next word 
 Returns the number of words 
 */
+int split_line( char line[], char splot_line[MAXLINES][MAXLEN] )
 {
 	int in_text=0; 
 	int column_index = 0; 
 	int cell_index =0; 
     int line_index; 
+    int this_char='\0'; 
     
 	for (line_index=0; line_index < strlen(line)+1; line_index++)
 	{
-		if ((line[line_index] == ' ') && (in_text ==1)) //hit a space 
+        this_char = line[line_index];  
+		if (((this_char == '\t') || (this_char == ' ')) && (in_text ==1)) //hit a space 
 		{ 			
 			in_text = 0;
 			splot_line[column_index][cell_index] = '\0'; 
 			cell_index = 0; 
 			column_index++; 			
 		} 
-		else if (line[line_index] == '\0') //reached end of the line 
+		else if (this_char == '\0') //reached end of the line 
 		{ 
 			column_index++; //finished last column 
-			splot_line[column_index][cell_index] = line[line_index]; //copy trailing \0	
-
+			splot_line[column_index][cell_index] = this_char; //copy trailing \0	
 			return column_index; 
 		} 
-		else if ((line[line_index] != ' ') && (line[line_index] != '\n') ) //cell contents 
+		else if ((this_char != '\t') && (this_char != ' ') && (this_char != '\n') ) //cell contents 
 		{
 			in_text = 1; 
-			splot_line[column_index][cell_index] = line[line_index]; 
+			splot_line[column_index][cell_index] = this_char; 
 			cell_index++; 
 		}
 	}
