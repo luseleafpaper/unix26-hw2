@@ -192,7 +192,7 @@ int split_line( char line[], char splot_line[MAXLINES][MAXLEN] )
     int line_index; 
     int this_char='\0'; 
     
-	for (line_index=0; line_index < strlen(line)+1; line_index++)
+	for (line_index=0; line_index < strlen(line); line_index++)
 	{
         this_char = line[line_index];  
 		if (((this_char == '\t') || (this_char == ' ')) && (in_text ==1)) //hit a space 
@@ -202,10 +202,10 @@ int split_line( char line[], char splot_line[MAXLINES][MAXLEN] )
 			cell_index = 0; 
 			column_index++; 			
 		} 
-		else if (this_char == '\0') //reached end of the line 
+		else if ((this_char == '\n') || (this_char == '\0')) //reached end of the line 
 		{ 
+			splot_line[column_index][cell_index] = '\0'; //copy trailing \0	
 			column_index++; //finished last column 
-			splot_line[column_index][cell_index] = this_char; //copy trailing \0	
 			return column_index; 
 		} 
 		else if ((this_char != '\t') && (this_char != ' ') && (this_char != '\n') ) //cell contents 

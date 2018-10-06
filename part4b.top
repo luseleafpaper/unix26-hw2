@@ -1,14 +1,12 @@
 <noprocess>
 <html><head>
-<link rel='stylesheet' type='text/css' href='whostyle.css'/>
+<link rel=’stylesheet’ type=’text/css’ href=’whostyle.css’/>
 </head>
 <body bgcolor=white>
-<table class='redbox'>
+<table class=’redbox’>
 </noprocess>
 <attributes>
-class='name'
-class='tty'
-
-class='number'
-
+class=’name’
+class=’tty’
+class=’number’
 </attributes>
