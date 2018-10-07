@@ -3,131 +3,178 @@
 
 /*
 Methodology: 
-Create a 2D array of strings for attributes 
-read line by line using fgets() 
-if noprocess, just print 
-if attribute, store entire attribute into a row in my array 
-if process, then do exactly what the previous code did 
-if delim, store delim
-
-When splitting strings, split columns on any number of consecutive spaces, 
-but split single-char delimited text on each delimiter. 
+Read line by line using fgets() 
+if state is noprocess, just print 
+if state is attribute, store entire attribute into a row in my array 
+if process, then print html tags and insert attribute for that column 
 */ 
 
 
 /*
-Program states: 
-1. process block (default). Create html table. If attribute -> 2, if noprocess -> 3
-2. in attribute block. Store attributes to attr. if /attribute -> 1
-3. in noprocess block. print lines. if /noprocess -> 1
-4. in delimiter tag. Store the delimiter into DELIM 
+                                  +---------------+
++---------+                       |               |
+|         |                       |               |
+| Init    |                       |  No process   |
++--------++                       |  (print!)     |
+         |                        |               |
+         |         +-noprocess---->               |
+         |         |              +---+-----------+
+         |         |                  |
+      +--v---------+---+              |
+      |                |              |
+      |  Process       <--/noprocess--+
+      |  table text    |
+      |  (similar      |
+      |  last FSM)     |
+      |                |
+      +-+-^--------+-^-+            +-----------------+
+        | |        | |              |                 |
+        | |        | +--/delim------+                 |
+        | |        |                |  Get delimiter  |
+        | |        |                |                 |
+        | |        +-----delim------>                 |
+        | |                         +-----------------+
+        | |
+        | |                +----------------+
+        | |                |                |
+        | +--+/attributes--+  Store         |
+        |                  |  attributes    |
+        |                  |  (build attr   |
+        +-----+attributes-->  array)        |
+                           |                |
+                           +----------------+
+
 */
-char DELIM =' ';
+
+#define START 1 
+#define PROCESS 2 
+#define NOPROCESS 3 
+#define ATTRIBUTE 4 
+#define SETDELIM 5 
+
 int MAXLINES=300; 
 int MAXLEN=300; 
-void process(char [], char attr[MAXLINES][MAXLEN] ); 
-int get_state(int state, char []); 
-char find_delim(char []); 
-int split_line( char orig[], char fields[MAXLINES][MAXLEN], char DELIM );
 
+int check_line_state(int prevstate, char line[MAXLEN]); 
+int split_line(char line[MAXLEN], char splot_line[MAXLINES][MAXLEN], int delim); 
+int process_line(char line[MAXLEN], char attr[MAXLINES][MAXLEN], int delim); 
+int store_attr(int attr_index, char attr[MAXLINES][MAXLEN], char line[MAXLEN]); 
+int get_delim(char line[MAXLEN]);
 
-void main()
+/*
+main() 
+
+Stores attributes, an array of strings 
+Stores the current line, a string 
+Stores the number of attributes 
+Sets the delim if found, otherwise use space or tab
+
+Manages the transitions between the PROCESS, NOPROCESS, and ATTRIBUTE states
+It calls check_line_state() after each line to look for state change tags 
+Here's what we do in each state: 
+NOPROCESS: print out the line as is 
+ATTRIBUTE: As soon as we enter this state, each new line goes into the attr array
+PROCESS: Send line by line of table text into process_line() to form rows and cells with attrs 
+GETDELIM: Parses out the delim character from the delim tag 
+*/ 
+int main()
 {
-	int cur;
-    int oldstate=1; // the state of the cursor when processing text
-	int pstate=1; //the state of the program
-	int tag=0; 
-
 	char attr[MAXLINES][MAXLEN]; 
-
+	//char table_lines[MAXLINES][MAXLEN]; 
 	char line[MAXLEN]; 
-	int attr_index = 0;
-	
+	int attr_index = 0; 
 
-
+    int state = START; 
+    int prevstate = START; 
+    int delim = ' '; 
+    
 	while( fgets(line, MAXLEN, stdin) ) { 
 		/* keep \n and add \0 to end of line */
-		//printf("\nstate: %d, tag: %d, line: %s", pstate, tag, line); 
-		oldstate = pstate; 
-		pstate = get_state(pstate, line); 
 
-		if (oldstate != pstate) tag = 1; 
-
-		if (pstate ==4) //standalone tags go before the "do nothing if tag" block
-		{
-			DELIM = find_delim(line); 
-			tag = 0; 
-			pstate = oldstate; 
-		}
-		else if (tag ==1) { 
-		//do nothing when the line IS the tag 
-		tag = 0;  
-		} 
-        else if (pstate ==2) // store attribute 
-        { 
-            strcpy(attr[attr_index], line); 
-            attr[attr_index][strlen(line)-1] = '\0'; 
-            attr_index++; 
+        prevstate = state; 
+		state = check_line_state(prevstate, line); 
+        
+        if (state==SETDELIM) { 
+            printf("######## SETTING DELIM ############") ;
+            delim = get_delim(line); 
+            state=PROCESS; 
+        }
+        else if (state!=prevstate) { 
+            // do nothing! this is the state change line! 
         } 
-		else if (pstate ==3) // no process
-		{
-			printf("%s", line); 
-		} 
-		else //default format table 
-		{
-			process(line, attr); 
-		}
-		
+        else if (state==NOPROCESS) {
+            printf("%s", line); 
+        } 
+        else if (state==ATTRIBUTE) { 
+            attr_index = store_attr(attr_index, attr, line); 
+        } 
+        else if (state==PROCESS) { 
+            process_line(line, attr, delim); 
+        } 
+        else {
+            return -1; //something went wrong?
+        }
 	}
+    return 0;
 } 
 
-int get_state(int curstate, char line[]) 
+
+/*
+store_attr()
+Takes the current attr_index, the attr table, and text line
+Stores the text as the next attr, increments the attr_index
+returns the attr_index
+*/
+int store_attr(int attr_index, char attr[MAXLINES][MAXLEN], char line[MAXLEN]) 
 {
-	
-	if ((curstate == 1) && (strstr(line, "<attributes>") ))  { 
-
-		curstate = 2; 
-	} 
-	if ((curstate == 2) && (strstr(line, "</attributes>") )) { 
-
-		curstate = 1; 
-	} 
-	if (strstr(line, "<noprocess>") ) { 
-
-		curstate = 3; 
-	} 
-	if (strstr(line, "</noprocess>") ) { 
-
-		curstate = 1; 
-	} 
-	if ((strstr(line, "<delim value=") ))  { 
- 		
-		curstate = 4; 
-	}
-	return curstate; 
+    strncpy(attr[attr_index], line, MAXLEN); 
+    attr[attr_index][strlen(attr[attr_index])-1] = '\0';
+    attr_index++; 
+    return attr_index; 
 }
 
-char find_delim(char line[]) 
-/* 
-In the <delim> tag, the delimiter is a char that follows the equal sign
+
+/*
+check_line_state()
+Takes the incoming line, checks if it is a line that can change the FSM state 
+If so, return the new state.
+Returns -1 if something goes wrong
+*/
+int check_line_state(int prevstate, char line[]) 
+{
+	
+    if ((prevstate == START) || (prevstate == PROCESS))  { 
+        if (strstr(line, "<noprocess>")) return NOPROCESS; 
+        if (strstr(line, "<attributes>")) return ATTRIBUTE; 
+        if (strstr(line, "<delim")) {
+            printf("$$$$$$$$$$$$$$$ FOUND DELIM $$$$$$$$$$$");
+            return SETDELIM;
+        } 
+        return PROCESS; 
+    } 
+    if (prevstate == ATTRIBUTE)  { 
+        if (strstr(line, "</attributes>")) return PROCESS; 
+        return prevstate; // else do this by defaut  
+    }
+    if (prevstate == NOPROCESS)  { 
+        if (strstr(line, "</noprocess>")) return PROCESS; 
+        return prevstate; // else do this by defaut  
+    }
+    return -1; // something went wrong! 
+    
+}
+
+
+/*
+Creates the table rows and columns by using split_lines() 
+Adds attributes per column from the attributes array 
 */ 
-{ 
-	int i ; 
-	for (i = 0; i<strlen(line); i++)
-	{ 
-		if (line[i]=='=')
-		{ 
-			return line[i+1]; 
-		} 
-	} 
-} 
-void process(char line[], char attr[MAXLINES][MAXLEN]) 
+int process_line(char line[MAXLEN], char attr[MAXLINES][MAXLEN], int delim) 
 { 
 	char row[MAXLINES][MAXLEN];
 	int columns; 
-	columns = split_line(line, row, DELIM); 
-
-	printf("\n\t<tr>"); 
+	columns = split_line(line, row, delim); 
+	printf("\t<tr>"); 
     int i;  
 	for (i = 0; i < columns; i++)
 	{ 
@@ -135,55 +182,78 @@ void process(char line[], char attr[MAXLINES][MAXLEN])
 	} 
 
 	printf("\n\t</tr>\n"); 
+    return 0;
 } 
 
-int
-split_line( char line[], char row[MAXLINES][MAXLEN], char DELIM)
+
 /*
-If DELIM is a space, then we have the default space-delimited behavior. 
-A block of spaces, no matter how long it is, is treated as one delimiter
-If DELIM is not a space, then we have to treat each DELIM as a column separator
+Splits lines of text that needs to be processed on space
+Can be in two states: in text, or in white space. 
+Stores results into an 2D array 
+If in text, write characters to array
+If in whitespace, move to the next index in the array to store the next word 
+Returns the number of words 
 */
+int split_line( char line[MAXLEN], char splot_line[MAXLINES][MAXLEN], int delim )
 {
 	int in_text=0; 
 	int column_index = 0; 
 	int cell_index =0; 
     int line_index; 
+    int this_char='\0'; 
     
-	for (line_index=0; line_index < strlen(line)+1; line_index++)
+	for (line_index=0; line_index < strlen(line); line_index++)
 	{
-		if ((DELIM==' ') && (line[line_index] == ' ') && (in_text ==1)) //hit a space, create a new column 
+        this_char = line[line_index];  
+		if ((this_char == delim) && (in_text ==1)) //hit whitespace
 		{ 			
 			in_text = 0;
-			row[column_index][cell_index] = '\0'; 
+			splot_line[column_index][cell_index] = '\0'; 
 			cell_index = 0; 
 			column_index++; 			
 		} 
-		else if (line[line_index] == DELIM && (in_text ==1)) // hit a delim, create a new cell 
-		{ 		
-			in_text = 0;
-			row[column_index][cell_index] = '\0'; 
-			cell_index = 0; 
-			column_index++; 			
-		}
-		else if (line[line_index] == '\0') //reached end of the line 
+		else if ((this_char == '\n') || (this_char == '\0')) //reached end of the line 
 		{ 
+			splot_line[column_index][cell_index] = '\0'; //copy trailing \0	
 			column_index++; //finished last column 
-			row[column_index][cell_index] = line[line_index]; //copy ending \0	
-
 			return column_index; 
 		} 
-		else if ((line[line_index] != DELIM) && (line[line_index] != '\n') ) 
-		//cell contents 
+		else if ((this_char != delim) && (this_char != '\n') ) //cell contents 
 		{
 			in_text = 1; 
-			row[column_index][cell_index] = line[line_index]; 
+			splot_line[column_index][cell_index] = this_char; 
 			cell_index++; 
 		}
-		else {} // else do nothing. We are encountering spaces and in_text = 0 
 	}
-
-
+    return column_index; 
 }
 
 
+int get_delim(char line[MAXLEN]) 
+{
+    int value = ' ';
+    char *afterequal;
+    char *after1stquote;
+    char *after2ndquote;
+    int quote = '\'';
+    int delim_len = 1;
+
+    afterequal = strchr(line, '=');
+    quote = afterequal[1];
+    printf("quote is :%c", quote); 
+    after1stquote = strchr(afterequal, quote);
+    printf("\nstring is: %s",after1stquote);
+
+    if (strlen(after1stquote) > 2) {
+        after1stquote++;
+        value = after1stquote[0];
+        after2ndquote = strchr(after1stquote, quote);
+        delim_len = strlen(after1stquote) - strlen(after2ndquote);
+        
+        if (delim_len == 1) {
+            printf("\n Found delim! %c", value);
+            return value;
+        } 
+    }
+    return ' '; //didn't find a suitable delimiter 
+}
