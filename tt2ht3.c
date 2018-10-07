@@ -227,6 +227,13 @@ int split_line( char line[MAXLEN], char splot_line[MAXLINES][MAXLEN], int delim 
 }
 
 
+/*
+get_delim()
+Parses the line looking for the delim value. 
+If it can find enough characters to be a valid delim tag,
+then return that delim character. 
+Otherwise, return space, the default delim.
+*/
 int get_delim(char line[MAXLEN]) 
 {
     int value = ' ';
@@ -243,4 +250,41 @@ int get_delim(char line[MAXLEN])
     else { 
         return ' '; //didn't find a suitable delimiter 
     }
+}
+
+
+/* 
+I wrote this method to handle quoted delimiters. 
+Why? I always get tripped up with different OS quotes. 
+This will store the quote ascii character, 
+look for the char between them, check that it's just one char, 
+and then return that as the delimiter 
+*/
+int get_quoted_delim(char line[MAXLEN]) 
+{
+    int value = ' ';
+    char *afterequal;
+    char *after1stquote;
+    char *after2ndquote;
+    int quote = '\'';
+    int delim_len = 1;
+
+    afterequal = strchr(line, '=');
+    quote = afterequal[1];
+    printf("quote is :%c", quote); 
+    after1stquote = strchr(afterequal, quote);
+    printf("\nstring is: %s",after1stquote);
+
+    if (strlen(after1stquote) > 2) {
+        after1stquote++;
+        value = after1stquote[0];
+        after2ndquote = strchr(after1stquote, quote);
+        delim_len = strlen(after1stquote) - strlen(after2ndquote);
+        
+        if (delim_len == 1) {
+            printf("\n Found delim! %c", value);
+            return value;
+        } 
+    }
+    return ' '; //didn't find a suitable delimiter 
 }
