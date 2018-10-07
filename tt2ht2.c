@@ -196,7 +196,14 @@ int split_line( char line[], char splot_line[MAXLINES][MAXLEN] )
 	for (line_index=0; line_index < strlen(line); line_index++)
 	{
         this_char = line[line_index];  
-		if (((this_char == DELIM2) || (this_char == DELIM)) && (in_text ==1)) //hit a space 
+		if (cell_index > MAXLEN - 1) {
+            splot_line[column_index][cell_index] = '\0';
+            column_index++; // move onto the next column 
+        }
+        else if (column_index > MAXLINES -1) {
+            return column_index; // we are going to run out of space 
+        }
+        else if (((this_char == DELIM2) || (this_char == DELIM)) && (in_text ==1)) //hit a space 
 		{ 			
 			in_text = 0;
 			splot_line[column_index][cell_index] = '\0'; 

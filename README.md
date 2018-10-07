@@ -35,7 +35,7 @@ if process, then print html tags and insert attribute for that column
 
 Here's what I decided to with the nested attribute or noprocess tags. If there is EVER a noprocess tag, I never process the text in that block. In other words, if there is an attributes tag inside a noprocess block, I will print it. 
 
-This means that a true attribute block can only be access from outside a noprocess state. 
+The only way to enter the attribute or noprocess block is from the default process block. 
 
 #Part 5
 
@@ -51,33 +51,27 @@ read line by line using fgets()
 if noprocess, just print 
 if attribute, store entire attribute into a row in my array 
 if process, then do exactly what the previous code did 
-if delim, store delim
+if delim, parse and store delim
 
 When splitting strings, split columns on any number of consecutive spaces, 
 but split single-char delimited text on each delimiter. 
 
-Something that I realized was that if the delim tag appears after the text table, only subsequent text tables will use that delimiter. I can change that behavior by reading in the entire document before splitting lines.  
+I wrote an extra method (not used) that would look for the delimiter within multiple OS style quotes. I'm not sure why I did other than I noticed that the assignment quotes were always different from my computer's, and had the assignment been to parse value=';' instead of value=;, I would need to handle those quotes. If I had to use this in production, I might provide a list of valid quotes from various OS's. Right now, it just expect some type of quote after the equal sign. 
 
-Also, I did not have enough time to implement protection for overflow. If I were to do so, I would break any text-copying activity as soon as the number of characters exceeded my max. 
-
+I also did my best to implement some buffer overflow methods, for when cell data and row count is greater than the space allocated. 
 
 # Commands to test scripts on the command line
-/sbin/route | ./tt2ht1
-ls -l | ./tt2ht1
-./tt2ht1 < /etc/fstab
-(cd /home/l/i/lib113/lectures/lect04/5_Code/cgi; ./trainsched 1205) | ./tt2ht1
 
+cc -fno-stack-protector tt2ht1.c -o tt2ht1 -Wall
+who | ./tt2ht1
+ps | ./tt2ht1
+arp | ./tt2ht1
+lsmod | ./tt2ht1  
+perl part3b.cgi 
 
-echo "Content-type: text/html"
-echo ""
-( cat part4b.top ; cat ~lib113/hw/tt2ht/who.output ) | ./tt2ht2
-echo "</table></body></html>"
+cc -fno-stack-protector tt2ht2.c -o tt2ht2 -Wall
+perl part4b.cgi
 
-
-echo "Content-type: text/html"
-echo ""
-echo "<html><body><table>"
-( echo "<delim value=;/>" ; grep "TR=1205;" sched ) | ./tt2ht3
-echo "</table>"
-
+cc -fno-stack-protector tt2ht3.c -o tt2ht3 -Wall
+perl part5b.cgi
 
