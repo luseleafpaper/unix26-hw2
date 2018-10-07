@@ -95,7 +95,6 @@ int main()
 		state = check_line_state(prevstate, line); 
         
         if (state==SETDELIM) { 
-            printf("######## SETTING DELIM ############") ;
             delim = get_delim(line); 
             state=PROCESS; 
         }
@@ -147,7 +146,6 @@ int check_line_state(int prevstate, char line[])
         if (strstr(line, "<noprocess>")) return NOPROCESS; 
         if (strstr(line, "<attributes>")) return ATTRIBUTE; 
         if (strstr(line, "<delim")) {
-            printf("$$$$$$$$$$$$$$$ FOUND DELIM $$$$$$$$$$$");
             return SETDELIM;
         } 
         return PROCESS; 
@@ -233,27 +231,16 @@ int get_delim(char line[MAXLEN])
 {
     int value = ' ';
     char *afterequal;
-    char *after1stquote;
-    char *after2ndquote;
-    int quote = '\'';
-    int delim_len = 1;
 
     afterequal = strchr(line, '=');
-    quote = afterequal[1];
-    printf("quote is :%c", quote); 
-    after1stquote = strchr(afterequal, quote);
-    printf("\nstring is: %s",after1stquote);
 
-    if (strlen(after1stquote) > 2) {
-        after1stquote++;
-        value = after1stquote[0];
-        after2ndquote = strchr(after1stquote, quote);
-        delim_len = strlen(after1stquote) - strlen(after2ndquote);
+    if (strlen(afterequal) > 3) { // make sure it's a valid tag length! 
+        afterequal++;
+        value = afterequal[0];
         
-        if (delim_len == 1) {
-            printf("\n Found delim! %c", value);
-            return value;
-        } 
+        return value;
     }
-    return ' '; //didn't find a suitable delimiter 
+    else { 
+        return ' '; //didn't find a suitable delimiter 
+    }
 }
